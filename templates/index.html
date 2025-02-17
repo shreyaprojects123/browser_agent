@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Browser Agent</h1>
+        <div class="input-section">
+            <textarea id="prompt" placeholder="Enter your prompt"></textarea>
+            <button onclick="executePrompt()">Execute</button>
+        </div>
+        <div id="results" class="results-section"></div>
+    </div>
+
+    <script>
+        async function executePrompt() {
+            const prompt = document.getElementById('prompt').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = 'Processing...';
+            
+            try {
+                const response = await fetch('/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (Array.isArray(data.result)) {
+                        resultsDiv.innerHTML = '<h3>Results:</h3>' + 
+                            data.result.map((item, index) => `
+                                <div class="result-item">
+                                    <h4>${index + 1}. ${item.title}</h4>
+                                    <p>Price: ${item.price}</p>
+                                </div>
+                            `).join('');
+                    } else {
+                        resultsDiv.innerHTML = `<p>${data.result}</p>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
